@@ -77,6 +77,7 @@ def main():
                 stdin=subprocess.DEVNULL,
                 start_new_session=True,
             )
+            return
 
 
 main()

@@ -13,6 +13,9 @@ while not window_should_close():
         search += chr(key)
         key = get_char_pressed()
 
+    if is_key_pressed(KeyboardKey.KEY_BACKSPACE):
+        search = search[:-1]
+
     begin_drawing()
     clear_background(Color(30, 45, 50))
     draw_text(search, 5, 5, 24, WHITE)

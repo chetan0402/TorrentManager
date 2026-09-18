@@ -19,7 +19,9 @@ def get_torrents() -> list[Torrent]:
     torrents = client.torrents_info()
     res: list[Torrent] = []
     for torrent in torrents:
-        ratio_time_left: float = torrent.seeding_time / (torrent.ratio + 1e-9)
+        ratio_time_left: float = (torrent.seeding_time / (torrent.ratio + 1e-9)) * (
+            1 - torrent.ratio
+        )
         seed_time_left: int = 60 * torrent.max_seeding_time - torrent.seeding_time
         eta = min(ratio_time_left, seed_time_left)
         if eta <= 0:

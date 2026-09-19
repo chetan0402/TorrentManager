@@ -22,6 +22,7 @@ class App:
         h, w = get_monitor_height(0), get_monitor_width(0)
         set_window_size(w, h - 26)
         set_window_position(0, 26)
+        set_target_fps(60)
 
     def start(self) -> None:
         while not window_should_close():

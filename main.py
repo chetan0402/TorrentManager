@@ -56,7 +56,7 @@ if __name__ == "__main__":
                 opts.append(
                     (
                         t.hash,
-                        f"{t.name[:100]:<{100}}|{round(t.seed_ratio,2)}|{format_dynamic_duration(t.eta)}",
+                        f"{t.name[:100]:<{100}}|{round(t.seed_ratio,2):.2f}|{format_dynamic_duration(t.eta)}",
                     )
                 )
                 hash_to_torrent[t.hash] = t
@@ -71,7 +71,7 @@ if __name__ == "__main__":
                 opts.append(
                     (
                         t.hash,
-                        f"{t.name[:100]:<{100}}|{round(t.seed_ratio,2)}|{format_dynamic_duration(t.eta)}",
+                        f"{t.name[:100]:<{100}}|{round(t.seed_ratio,2):.2f}|{format_dynamic_duration(t.eta)}",
                     )
                 )
                 hash_to_torrent[t.hash] = t

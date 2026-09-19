@@ -5,6 +5,8 @@ import subprocess
 import rofi
 from models import *
 
+from renderer import App
+
 INF = 1e9
 
 client = qbittorrentapi.Client(host="localhost", port=8080)
@@ -40,48 +42,64 @@ def get_torrents() -> list[Torrent]:
     return res
 
 
-def main():
-    key = "active_time"
-    while True:
-        torrents = sorted(get_torrents(), key=lambda x: x.__getattribute__(key))
-
-        options: list[str] = []
-        for i, torrent in enumerate(torrents):
-            options.append(
-                f"{i:2}. {torrent.name[:100]:<{100}}|{round(torrent.seed_ratio,2):.2f}|{rofi.format_dynamic_duration(torrent.eta)}"
-            )
-        options.append("")
-        if key == "active_time":
-            options.append("sort by ETA")
-        else:
-            options.append("sort by time active")
-
-        selected = rofi.takeinput(options).split(".")[0].strip()
-        if selected == "":
-            return
-        elif selected == "sort by ETA":
-            key = "eta"
-        elif selected == "sort by time active":
-            key = "active_time"
-        else:
-            torrent = torrents[int(selected)]
-            if (
-                not torrent
-                or len(torrent.files) != 1
-                or not torrent.files[0].name.endswith(".mkv")
-            ):
-                return
-
-            subprocess.Popen(
-                ["mpv", f"{torrent.save_path}/{torrent.files[0].name}"],
-                stdout=subprocess.DEVNULL,
-                stderr=subprocess.DEVNULL,
-                stdin=subprocess.DEVNULL,
-                start_new_session=True,
-            )
-            return
-
-
 if __name__ == "__main__":
-    main()
+    app = App()
+    hash_to_torrent: dict[str, Torrent] = {}
+
+    def callback(key: str) -> None:
+        app.search = ""
+        if key == "":
+            return
+
+        if key == "eta":
+            opts: list[tuple[str, str]] = []
+            for t in sorted(get_torrents(), key=lambda x: x.eta):
+                opts.append(
+                    (
+                        t.hash,
+                        f"{t.name[:100]:<{100}}|{round(t.seed_ratio,2)}|{rofi.format_dynamic_duration(t.eta)}",
+                    )
+                )
+                hash_to_torrent[t.hash] = t
+            opts.append(("", ""))
+            opts.append(("time", "sort by time"))
+            app.state.opts = opts
+            return
+
+        if key == "time":
+            opts: list[tuple[str, str]] = []
+            for t in sorted(get_torrents(), key=lambda x: x.active_time):
+                opts.append(
+                    (
+                        t.hash,
+                        f"{t.name[:100]:<{100}}|{round(t.seed_ratio,2)}|{rofi.format_dynamic_duration(t.eta)}",
+                    )
+                )
+                hash_to_torrent[t.hash] = t
+            opts.append(("", ""))
+            opts.append(("eta", "sort by eta"))
+            app.state.opts = opts
+            return
+
+        torrent = hash_to_torrent[key]
+        if (
+            not torrent
+            or len(torrent.files) != 1
+            or not torrent.files[0].name.endswith(".mkv")
+        ):
+            return
+
+        subprocess.Popen(
+            ["mpv", f"{torrent.save_path}/{torrent.files[0].name}"],
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+            stdin=subprocess.DEVNULL,
+            start_new_session=True,
+        )
+        exit(0)
+
+    state = State([], callback, {})
+    app.set_state(state)
+    callback("time")
+    app.start()
     client.auth_log_out()

@@ -2,7 +2,6 @@ from pyray import *  # pyright: ignore[reportWildcardImportFromLibrary]
 
 import time
 
-import main
 from models import *
 
 THRESHOLD_PRESS = 50
@@ -12,16 +11,17 @@ class App:
     state: State
     last_pressed: dict[KeyboardKey, int] = {}
     search = ""
+    prev_search = "moew"
     selected = -1
     filtered: list[tuple[str, str]] = []
 
     def __init__(self) -> None:
+        set_config_flags(ConfigFlags.FLAG_WINDOW_UNDECORATED)
         init_window(1, 1, "")
         self.FONT = load_font_ex("RobotoMonoNerdFont-Medium.ttf", 20, None, 0)
         h, w = get_monitor_height(0), get_monitor_width(0)
         set_window_size(w, h - 26)
         set_window_position(0, 26)
-        set_window_state(ConfigFlags.FLAG_WINDOW_UNDECORATED)
 
     def start(self) -> None:
         while not window_should_close():
@@ -39,21 +39,22 @@ class App:
                     self.last_pressed[key] = time_rn
                     self.state.keybinds[key]()
 
-            self.filtered = []
-            for key, label in self.state.opts:
-                if label.lower().__contains__(self.search.lower()):
-                    self.filtered.append((key, label))
+            if self.prev_search != self.search:
+                self.filtered = []
+                for key, label in self.state.opts:
+                    if label.lower().__contains__(self.search.lower()):
+                        self.filtered.append((key, label))
+                self.prev_search = self.search
 
             begin_drawing()
             clear_background(Color(30, 45, 50))
             draw_text_ex(self.FONT, self.search, Vector2(5, 5), 20, 0, WHITE)
             i = 0
             for _, label in self.filtered:
-                if label.lower().__contains__(self.search.lower()):
-                    draw_text_ex(
-                        self.FONT, label, Vector2(5, 5 + 20 + i * 20), 20, 0, WHITE
-                    )
-                    i = i + 1
+                draw_text_ex(
+                    self.FONT, label, Vector2(5, 5 + 20 + i * 20), 20, 0, WHITE
+                )
+                i = i + 1
 
             if i > 0:
                 self.selected = int(clamp(self.selected, 0, i - 1))
@@ -101,6 +102,8 @@ class App:
 
 
 if __name__ == "__main__":
+    import main
+
     app = App()
 
     def callback(key: str) -> None:

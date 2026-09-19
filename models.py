@@ -1,4 +1,7 @@
+from pyray import KeyboardKey
+
 from dataclasses import dataclass
+from typing import Callable
 
 
 @dataclass
@@ -15,3 +18,9 @@ class Torrent:
     eta: int  # in seconds
     files: list[File]
     save_path: str
+
+
+@dataclass
+class State:
+    opts: dict[str, str]
+    keybinds: dict[KeyboardKey, Callable[[], None]]

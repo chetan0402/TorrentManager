@@ -9,7 +9,7 @@ THRESHOLD_PRESS = 50
 
 
 class App:
-    state = State({},{})
+    state = State({}, {})
     last_pressed: dict[KeyboardKey, int] = {}
     search = ""
 
@@ -21,7 +21,7 @@ class App:
         set_window_position(0, 26)
         set_window_state(ConfigFlags.FLAG_WINDOW_UNDECORATED)
 
-    def start(self)->None:
+    def start(self) -> None:
         while not window_should_close():
             key = get_char_pressed()
             while key > 0:
@@ -43,29 +43,31 @@ class App:
             i = 0
             for label in self.state.opts:
                 if label.lower().__contains__(self.search.lower()):
-                    draw_text_ex(self.FONT, label, Vector2(5, 5 + 20 + i * 20), 20, 0, WHITE)
-                    i=i+1
+                    draw_text_ex(
+                        self.FONT, label, Vector2(5, 5 + 20 + i * 20), 20, 0, WHITE
+                    )
+                    i = i + 1
             end_drawing()
 
-    def set_state(self,state: State)->None:
-        self.state=state
+    def set_state(self, state: State) -> None:
+        self.state = state
         for key in self.state.keybinds:
-            self.last_pressed[key]=0
+            self.last_pressed[key] = 0
 
     def __del__(self) -> None:
         close_window()
 
 
 if __name__ == "__main__":
-    app=App()
-    state=State({},{})
+    app = App()
+    state = State({}, {})
     for t in main.get_torrents():
-        state.opts[t.name]=t.hash
+        state.opts[t.name] = t.hash
 
     def remove_char():
-        app.search=app.search[:-1]
+        app.search = app.search[:-1]
 
-    state.keybinds[KeyboardKey(KeyboardKey.KEY_BACKSPACE)]=remove_char
+    state.keybinds[KeyboardKey(KeyboardKey.KEY_BACKSPACE)] = remove_char
 
     app.set_state(state)
     app.start()

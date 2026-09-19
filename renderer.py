@@ -9,9 +9,11 @@ THRESHOLD_PRESS = 50
 
 
 class App:
-    state = State({}, {})
+    state: State
     last_pressed: dict[KeyboardKey, int] = {}
     search = ""
+    selected = -1
+    filtered: list[tuple[str, str]] = []
 
     def __init__(self) -> None:
         init_window(1, 1, "")
@@ -37,16 +39,32 @@ class App:
                     self.last_pressed[key] = time_rn
                     self.state.keybinds[key]()
 
+            self.filtered = []
+            for key, label in self.state.opts:
+                if label.lower().__contains__(self.search.lower()):
+                    self.filtered.append((key, label))
+
             begin_drawing()
             clear_background(Color(30, 45, 50))
             draw_text_ex(self.FONT, self.search, Vector2(5, 5), 20, 0, WHITE)
             i = 0
-            for label in self.state.opts:
+            for _, label in self.filtered:
                 if label.lower().__contains__(self.search.lower()):
                     draw_text_ex(
                         self.FONT, label, Vector2(5, 5 + 20 + i * 20), 20, 0, WHITE
                     )
                     i = i + 1
+
+            if i > 0:
+                self.selected = int(clamp(self.selected, 0, i - 1))
+
+            draw_rectangle(
+                5,
+                5 + 20 * (self.selected + 1),
+                get_monitor_width(0),
+                20,
+                color_alpha(WHITE, 0.2),
+            )
             end_drawing()
 
     def set_state(self, state: State) -> None:
@@ -54,20 +72,43 @@ class App:
         for key in self.state.keybinds:
             self.last_pressed[key] = 0
 
+        def backspace():
+            self.search = self.search[:-1]
+
+        def down():
+            self.selected = self.selected + 1
+
+        def up():
+            self.selected = self.selected - 1
+
+        def enter():
+            self.state.opts_handler(self.filtered[self.selected][0])
+
+        self.state.keybinds[KeyboardKey(KeyboardKey.KEY_BACKSPACE)] = backspace
+        self.last_pressed[KeyboardKey(KeyboardKey.KEY_BACKSPACE)] = 0
+
+        self.state.keybinds[KeyboardKey(KeyboardKey.KEY_DOWN)] = down
+        self.last_pressed[KeyboardKey(KeyboardKey.KEY_DOWN)] = 0
+
+        self.state.keybinds[KeyboardKey(KeyboardKey.KEY_UP)] = up
+        self.last_pressed[KeyboardKey(KeyboardKey.KEY_UP)] = 0
+
+        self.state.keybinds[KeyboardKey(KeyboardKey.KEY_ENTER)] = enter
+        self.last_pressed[KeyboardKey(KeyboardKey.KEY_ENTER)] = 0
+
     def __del__(self) -> None:
         close_window()
 
 
 if __name__ == "__main__":
     app = App()
-    state = State({}, {})
+
+    def callback(key: str) -> None:
+        print(key)
+
+    state = State([], callback, {})
     for t in main.get_torrents():
-        state.opts[t.name] = t.hash
-
-    def remove_char():
-        app.search = app.search[:-1]
-
-    state.keybinds[KeyboardKey(KeyboardKey.KEY_BACKSPACE)] = remove_char
+        state.opts.append((t.hash, t.name))
 
     app.set_state(state)
     app.start()

@@ -22,5 +22,6 @@ class Torrent:
 
 @dataclass
 class State:
-    opts: dict[str, str]
+    opts: list[tuple[str, str]]
+    opts_handler: Callable[[str], None]
     keybinds: dict[KeyboardKey, Callable[[], None]]

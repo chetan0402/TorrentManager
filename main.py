@@ -82,5 +82,6 @@ def main():
             return
 
 
-main()
-client.auth_log_out()
+if __name__ == "__main__":
+    main()
+    client.auth_log_out()

@@ -50,36 +50,6 @@ if __name__ == "__main__":
         if key == "":
             return
 
-        if key == "eta":
-            opts: list[tuple[str, str]] = []
-            for t in sorted(get_torrents(), key=lambda x: x.eta):
-                opts.append(
-                    (
-                        t.hash,
-                        f"{t.name[:100]:<{100}}|{round(t.seed_ratio,2):.2f}|{format_dynamic_duration(t.eta)}",
-                    )
-                )
-                hash_to_torrent[t.hash] = t
-            opts.append(("", ""))
-            opts.append(("time", "sort by time"))
-            app.state.opts = opts
-            return
-
-        if key == "time":
-            opts: list[tuple[str, str]] = []
-            for t in sorted(get_torrents(), key=lambda x: x.active_time):
-                opts.append(
-                    (
-                        t.hash,
-                        f"{t.name[:100]:<{100}}|{round(t.seed_ratio,2):.2f}|{format_dynamic_duration(t.eta)}",
-                    )
-                )
-                hash_to_torrent[t.hash] = t
-            opts.append(("", ""))
-            opts.append(("eta", "sort by eta"))
-            app.state.opts = opts
-            return
-
         torrent = hash_to_torrent[key]
         if (
             not torrent
@@ -97,8 +67,28 @@ if __name__ == "__main__":
         )
         exit(0)
 
-    state = State([], callback, {})
+    sort_by = "eta"
+
+    def tab_callback():
+        global sort_by
+        if sort_by == "active_time":
+            sort_by = "eta"
+        else:
+            sort_by = "active_time"
+
+        opts: list[tuple[str, str]] = []
+        for t in sorted(get_torrents(), key=lambda x: x.__getattribute__(sort_by)):
+            opts.append(
+                (
+                    t.hash,
+                    f"{t.name[:100]:<{100}}|{t.seed_ratio:.2f}|{format_dynamic_duration(t.eta)}",
+                )
+            )
+            hash_to_torrent[t.hash] = t
+            app.set_opts(opts)
+
+    state = State([], callback, {KeyboardKey(KeyboardKey.KEY_TAB): tab_callback})
     app.set_state(state)
-    callback("time")
+    tab_callback()
     app.start()
     client.auth_log_out()

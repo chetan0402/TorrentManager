@@ -13,7 +13,7 @@ class App:
     state: State
     last_pressed: dict[KeyboardKey, tuple[int, Literal["first", "repeat"]]] = {}
     search = ""
-    prev_search = "moew"
+    prev_search = None
     selected = -1
     filtered: list[tuple[str, str]] = []
 
@@ -35,22 +35,16 @@ class App:
 
             for key in self.state.keybinds:
                 time_rn = time.time_ns() // 1000000
-                if is_key_down(key):
-                    if (
-                        self.last_pressed[key][1] == "repeat"
-                        and self.last_pressed[key][0] + THRESHOLD_FIRST_INPUT < time_rn
-                    ):
-                        self.last_pressed[key] = (time_rn, "first")
-                        self.state.keybinds[key]()
-                    if (
-                        self.last_pressed[key][1] == "repeat"
-                        and self.last_pressed[key][0] + THRESHOLD_REPEAT_INPUT < time_rn
-                    ):
-                        self.last_pressed[key] = (time_rn, "repeat")
-                        self.state.keybinds[key]()
+                if is_key_pressed(key):
+                    self.last_pressed[key] = (time_rn, "first")
+                    self.state.keybinds[key]()
+                elif is_key_down(key):
                     if (
                         self.last_pressed[key][1] == "first"
                         and self.last_pressed[key][0] + THRESHOLD_FIRST_INPUT < time_rn
+                    ) or (
+                        self.last_pressed[key][1] == "repeat"
+                        and self.last_pressed[key][0] + THRESHOLD_REPEAT_INPUT < time_rn
                     ):
                         self.last_pressed[key] = (time_rn, "repeat")
                         self.state.keybinds[key]()
@@ -86,8 +80,7 @@ class App:
 
     def set_state(self, state: State) -> None:
         self.state = state
-        for key in self.state.keybinds:
-            self.last_pressed[key] = (0, "first")
+        self.prev_search = None
 
         def backspace():
             self.search = self.search[:-1]
@@ -102,16 +95,16 @@ class App:
             self.state.opts_handler(self.filtered[self.selected][0])
 
         self.state.keybinds[KeyboardKey(KeyboardKey.KEY_BACKSPACE)] = backspace
-        self.last_pressed[KeyboardKey(KeyboardKey.KEY_BACKSPACE)] = (0, "first")
-
         self.state.keybinds[KeyboardKey(KeyboardKey.KEY_DOWN)] = down
-        self.last_pressed[KeyboardKey(KeyboardKey.KEY_DOWN)] = (0, "first")
-
         self.state.keybinds[KeyboardKey(KeyboardKey.KEY_UP)] = up
-        self.last_pressed[KeyboardKey(KeyboardKey.KEY_UP)] = (0, "first")
-
         self.state.keybinds[KeyboardKey(KeyboardKey.KEY_ENTER)] = enter
-        self.last_pressed[KeyboardKey(KeyboardKey.KEY_ENTER)] = (0, "first")
+
+        for key in self.state.keybinds:
+            self.last_pressed[key] = (time.time_ns() // 1000000, "first")
+
+    def set_opts(self, opts: list[tuple[str, str]]) -> None:
+        self.state.opts = opts
+        self.prev_search = None
 
     def __del__(self) -> None:
         close_window()

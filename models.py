@@ -18,6 +18,9 @@ class Torrent:
     eta: int  # in seconds
     files: list[File]
     save_path: str
+    max_inactive_seeding_time: int
+    max_ratio: int
+    max_seeding_time: int
 
 
 @dataclass

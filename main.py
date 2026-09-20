@@ -7,6 +7,7 @@ from decorate import *
 from renderer import App
 
 INF = 1e9
+HASH_TO_TORRENT: dict[str, Torrent] = {}
 
 client = qbittorrentapi.Client(host="localhost", port=8080)
 
@@ -36,6 +37,9 @@ def get_torrents() -> list[Torrent]:
                 eta=round(eta),
                 files=[File(i.name) for i in torrent.files],
                 save_path=torrent.save_path,
+                max_inactive_seeding_time=torrent.max_inactive_seeding_time,
+                max_ratio=torrent.max_ratio,
+                max_seeding_time=torrent.max_seeding_time,
             )
         )
     return res
@@ -43,7 +47,6 @@ def get_torrents() -> list[Torrent]:
 
 class Main:
     app: App
-    hash_to_torrent: dict[str, Torrent] = {}
     sort_by: str = "eta"
 
     def __init__(self, app: App) -> None:
@@ -64,7 +67,7 @@ class Main:
         if key == "":
             return
 
-        torrent = self.hash_to_torrent[key]
+        torrent = HASH_TO_TORRENT[key]
         if (
             not torrent
             or len(torrent.files) != 1
@@ -94,26 +97,51 @@ class Main:
                     f"{t.name[:100]:<{100}}|{t.seed_ratio:.2f}|{format_dynamic_duration(t.eta)}",
                 )
             )
-            self.hash_to_torrent[t.hash] = t
+            HASH_TO_TORRENT[t.hash] = t
         self.app.set_opts(opts)
 
-    def right_arrow_callback(self, _: str):
-        TorrentInfoScreen(app, "")
+    def right_arrow_callback(self, key: str):
+        TorrentInfoScreen(app, key)
 
 
 class TorrentInfoScreen:
     app: App
+    hash: str = ""
 
     def __init__(self, app: App, key: str) -> None:
         self.app = app
+        self.hash = key
         state = State(
-            [(key, key)],
-            {KeyboardKey(KeyboardKey.KEY_LEFT): self.left_arrow_callback},
+            [
+                (key, HASH_TO_TORRENT[key].name),
+                ("no", "No limit"),
+                ("global", "Set global limit"),
+                ("airing", "Set airing limit"),
+            ],
+            {
+                KeyboardKey(KeyboardKey.KEY_ENTER): self.enter_callback,
+                KeyboardKey(KeyboardKey.KEY_LEFT): self.left_arrow_callback,
+            },
         )
         self.app.set_state(state)
 
-    def callback(self, key: str):
-        pass
+    def enter_callback(self, key: str):
+        if key == hash:
+            return
+        inactive = -1
+        ratio = -1
+        active = -1
+        if key == "global":
+            inactive = -2
+            ratio = -2
+            active = -2
+        if key == "airing":
+            ratio = 1
+            active = 4000
+        client.torrents_set_share_limits(
+            ratio, active, inactive, torrent_hashes=self.hash
+        )
+        Main(app)
 
     def left_arrow_callback(self, _: str):
         Main(app)

@@ -41,23 +41,36 @@ def get_torrents() -> list[Torrent]:
     return res
 
 
-if __name__ == "__main__":
-    app = App()
+class Main:
+    app: App
     hash_to_torrent: dict[str, Torrent] = {}
+    sort_by: str = "eta"
 
-    def callback(key: str) -> None:
-        app.search = ""
+    def __init__(self, app: App) -> None:
+        self.app = app
+        state = State(
+            [],
+            {
+                KeyboardKey(KeyboardKey.KEY_ENTER): self.enter_callback,
+                KeyboardKey(KeyboardKey.KEY_TAB): self.tab_callback,
+                KeyboardKey(KeyboardKey.KEY_RIGHT): self.right_arrow_callback,
+            },
+        )
+        app.set_state(state)
+        self.tab_callback("")
+
+    def enter_callback(self, key: str) -> None:
+        self.app.search = ""
         if key == "":
             return
 
-        torrent = hash_to_torrent[key]
+        torrent = self.hash_to_torrent[key]
         if (
             not torrent
             or len(torrent.files) != 1
             or not torrent.files[0].name.endswith(".mkv")
         ):
             return
-
         subprocess.Popen(
             ["mpv", f"{torrent.save_path}/{torrent.files[0].name}"],
             stdout=subprocess.DEVNULL,
@@ -67,28 +80,47 @@ if __name__ == "__main__":
         )
         exit(0)
 
-    sort_by = "eta"
-
-    def tab_callback():
-        global sort_by
-        if sort_by == "active_time":
-            sort_by = "eta"
+    def tab_callback(self, _: str):
+        if self.sort_by == "eta":
+            self.sort_by = "active_time"
         else:
-            sort_by = "active_time"
+            self.sort_by = "eta"
 
         opts: list[tuple[str, str]] = []
-        for t in sorted(get_torrents(), key=lambda x: x.__getattribute__(sort_by)):
+        for t in sorted(get_torrents(), key=lambda x: x.__getattribute__(self.sort_by)):
             opts.append(
                 (
                     t.hash,
                     f"{t.name[:100]:<{100}}|{t.seed_ratio:.2f}|{format_dynamic_duration(t.eta)}",
                 )
             )
-            hash_to_torrent[t.hash] = t
-            app.set_opts(opts)
+            self.hash_to_torrent[t.hash] = t
+        self.app.set_opts(opts)
 
-    state = State([], callback, {KeyboardKey(KeyboardKey.KEY_TAB): tab_callback})
-    app.set_state(state)
-    tab_callback()
+    def right_arrow_callback(self, _: str):
+        TorrentInfoScreen(app, "")
+
+
+class TorrentInfoScreen:
+    app: App
+
+    def __init__(self, app: App, key: str) -> None:
+        self.app = app
+        state = State(
+            [(key, key)],
+            {KeyboardKey(KeyboardKey.KEY_LEFT): self.left_arrow_callback},
+        )
+        self.app.set_state(state)
+
+    def callback(self, key: str):
+        pass
+
+    def left_arrow_callback(self, _: str):
+        Main(app)
+
+
+if __name__ == "__main__":
+    app = App()
+    main = Main(app)
     app.start()
     client.auth_log_out()

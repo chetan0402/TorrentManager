@@ -15,6 +15,7 @@ class App:
     search = ""
     prev_search = None
     selected = -1
+    opt_selected: str = ""
     filtered: list[tuple[str, str]] = []
 
     def __init__(self) -> None:
@@ -33,11 +34,24 @@ class App:
                 self.search += chr(key)
                 key = get_char_pressed()
 
+            if self.prev_search != self.search:
+                self.filtered = []
+                for key, label in self.state.opts:
+                    if label.lower().__contains__(self.search.lower()):
+                        self.filtered.append((key, label))
+                self.prev_search = self.search
+
+            self.selected = int(clamp(self.selected, 0, len(self.filtered) - 1))
+            if len(self.filtered) > 0:
+                self.opt_selected = self.filtered[self.selected][0]
+            else:
+                self.opt_selected = ""
+
             for key in self.state.keybinds:
                 time_rn = time.time_ns() // 1000000
                 if is_key_pressed(key):
                     self.last_pressed[key] = (time_rn, "first")
-                    self.state.keybinds[key]()
+                    self.state.keybinds[key](self.opt_selected)
                 elif is_key_down(key):
                     if (
                         self.last_pressed[key][1] == "first"
@@ -47,31 +61,20 @@ class App:
                         and self.last_pressed[key][0] + THRESHOLD_REPEAT_INPUT < time_rn
                     ):
                         self.last_pressed[key] = (time_rn, "repeat")
-                        self.state.keybinds[key]()
-
-            if self.prev_search != self.search:
-                self.filtered = []
-                for key, label in self.state.opts:
-                    if label.lower().__contains__(self.search.lower()):
-                        self.filtered.append((key, label))
-                self.prev_search = self.search
+                        self.state.keybinds[key](self.opt_selected)
 
             begin_drawing()
             clear_background(Color(30, 45, 50))
             draw_text_ex(self.FONT, self.search, Vector2(5, 5), 20, 0, WHITE)
-            i = 0
-            for _, label in self.filtered:
+            for i, t in enumerate(self.filtered):
+                _, label = t
                 draw_text_ex(
                     self.FONT, label, Vector2(5, 5 + 20 + i * 20), 20, 0, WHITE
                 )
-                i = i + 1
-
-            if i > 0:
-                self.selected = int(clamp(self.selected, 0, i - 1))
 
             draw_rectangle(
                 5,
-                5 + 20 * (self.selected + 1),
+                5 + 20 * (int(clamp(self.selected, 0, len(self.filtered) - 1)) + 1),
                 get_monitor_width(0),
                 20,
                 color_alpha(WHITE, 0.2),
@@ -82,22 +85,18 @@ class App:
         self.state = state
         self.prev_search = None
 
-        def backspace():
+        def backspace(_):
             self.search = self.search[:-1]
 
-        def down():
+        def down(_):
             self.selected = self.selected + 1
 
-        def up():
+        def up(_):
             self.selected = self.selected - 1
-
-        def enter():
-            self.state.opts_handler(self.filtered[self.selected][0])
 
         self.state.keybinds[KeyboardKey(KeyboardKey.KEY_BACKSPACE)] = backspace
         self.state.keybinds[KeyboardKey(KeyboardKey.KEY_DOWN)] = down
         self.state.keybinds[KeyboardKey(KeyboardKey.KEY_UP)] = up
-        self.state.keybinds[KeyboardKey(KeyboardKey.KEY_ENTER)] = enter
 
         for key in self.state.keybinds:
             self.last_pressed[key] = (time.time_ns() // 1000000, "first")
@@ -108,19 +107,3 @@ class App:
 
     def __del__(self) -> None:
         close_window()
-
-
-if __name__ == "__main__":
-    import main
-
-    app = App()
-
-    def callback(key: str) -> None:
-        print(key)
-
-    state = State([], callback, {})
-    for t in main.get_torrents():
-        state.opts.append((t.hash, t.name))
-
-    app.set_state(state)
-    app.start()

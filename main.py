@@ -114,7 +114,12 @@ class TorrentInfoScreen:
         state = State(
             [
                 (key, HASH_TO_TORRENT[key].name),
-                ("no", "No limit"),
+                (key, f"Limit ratio: {HASH_TO_TORRENT[key].max_ratio:.2f}"),
+                (
+                    key,
+                    f"Limit seed time: {HASH_TO_TORRENT[key].max_seeding_time}mins",
+                ),
+                ("no", "Set no limit"),
                 ("global", "Set global limit"),
                 ("airing", "Set airing limit"),
             ],

@@ -83,7 +83,9 @@ class App:
 
     def set_state(self, state: State) -> None:
         self.state = state
+        self.search = ""
         self.prev_search = None
+        self.selected = -1
 
         def backspace(_):
             self.search = self.search[:-1]

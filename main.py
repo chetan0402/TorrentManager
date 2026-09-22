@@ -131,7 +131,7 @@ class TorrentInfoScreen:
         self.app.set_state(state)
 
     def enter_callback(self, key: str):
-        if key == hash:
+        if key == self.hash:
             return
         inactive = -1
         ratio = -1

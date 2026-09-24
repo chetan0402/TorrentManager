@@ -101,6 +101,8 @@ class Main:
         self.app.set_opts(opts)
 
     def right_arrow_callback(self, key: str):
+        if key == "":
+            return
         TorrentInfoScreen(app, key)
 
 

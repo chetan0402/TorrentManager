@@ -19,7 +19,9 @@ class App:
     filtered: list[tuple[str, str]] = []
 
     def __init__(self) -> None:
-        set_config_flags(ConfigFlags.FLAG_WINDOW_UNDECORATED)
+        set_config_flags(
+            ConfigFlags.FLAG_WINDOW_UNDECORATED | ConfigFlags.FLAG_WINDOW_TRANSPARENT
+        )
         init_window(1, 1, "")
         self.FONT = load_font_ex("RobotoMonoNerdFont-Medium.ttf", 20, None, 0)
         h, w = get_monitor_height(0), get_monitor_width(0)
@@ -64,7 +66,7 @@ class App:
                         self.state.keybinds[key](self.opt_selected)
 
             begin_drawing()
-            clear_background(Color(30, 45, 50))
+            clear_background(Color(30, 45, 50, 200))
             draw_text_ex(self.FONT, self.search, Vector2(5, 5), 20, 0, WHITE)
             for i, t in enumerate(self.filtered):
                 _, label = t

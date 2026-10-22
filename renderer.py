@@ -43,8 +43,8 @@ class App:
                         self.filtered.append((key, label))
                 self.prev_search = self.search
 
-            self.selected = (self.selected) % len(self.filtered)
             if len(self.filtered) > 0:
+                self.selected = (self.selected) % len(self.filtered)
                 self.opt_selected = self.filtered[self.selected][0]
             else:
                 self.opt_selected = ""

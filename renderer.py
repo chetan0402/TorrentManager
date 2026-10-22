@@ -43,7 +43,7 @@ class App:
                         self.filtered.append((key, label))
                 self.prev_search = self.search
 
-            self.selected = int(clamp(self.selected, 0, len(self.filtered) - 1))
+            self.selected = (self.selected) % len(self.filtered)
             if len(self.filtered) > 0:
                 self.opt_selected = self.filtered[self.selected][0]
             else:
@@ -74,20 +74,21 @@ class App:
                     self.FONT, label, Vector2(5, 5 + 20 + i * 20), 20, 0, WHITE
                 )
 
-            draw_rectangle(
-                5,
-                5 + 20 * (int(clamp(self.selected, 0, len(self.filtered) - 1)) + 1),
-                get_monitor_width(0),
-                20,
-                color_alpha(WHITE, 0.2),
-            )
+            if len(self.filtered) > 0:
+                draw_rectangle(
+                    5,
+                    5 + 20 * ((self.selected % len(self.filtered)) + 1),
+                    get_monitor_width(0),
+                    20,
+                    color_alpha(WHITE, 0.2),
+                )
             end_drawing()
 
     def set_state(self, state: State) -> None:
         self.state = state
         self.search = ""
         self.prev_search = None
-        self.selected = -1
+        self.selected = 0
 
         def backspace(_):
             self.search = self.search[:-1]

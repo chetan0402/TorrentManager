@@ -8,6 +8,7 @@ import (
 	"slices"
 
 	spotraygo "github.com/chetan0402/SpotRay-go"
+	rl "github.com/gen2brain/raylib-go/raylib"
 )
 
 const baseURL = "http://127.0.0.1:8080/api/v2"
@@ -29,6 +30,8 @@ type Torrent struct {
 	eta                 int     // in seconds
 }
 
+var SORTBYACTIVETIME bool = true
+
 func getTorrents() []Torrent {
 	resp, err := http.Get(torrentInfoURL)
 	if err != nil {
@@ -44,14 +47,23 @@ func getTorrents() []Torrent {
 	return torrents
 }
 
-func getMainState(sortByActiveTime bool) *spotraygo.State {
+func getMainState() *spotraygo.State {
 	torrents := getTorrents()
-	if sortByActiveTime {
+	if SORTBYACTIVETIME {
 		slices.SortFunc(torrents, func(a, b Torrent) int {
 			return cmp.Compare(a.TimeActive, b.TimeActive)
 		})
 	} else {
 		slices.SortFunc(torrents, func(a, b Torrent) int {
+			if a.eta < 0 && b.eta < 0 {
+				return cmp.Compare(a.TimeActive, b.TimeActive)
+			}
+			if a.eta < 0 {
+				return 1
+			}
+			if b.eta < 0 {
+				return -1
+			}
 			return cmp.Compare(a.eta, b.eta)
 		})
 	}
@@ -61,15 +73,20 @@ func getMainState(sortByActiveTime bool) *spotraygo.State {
 		opts[i].Value = fmt.Sprintf("%-100.100s|%.3f|%s", torrents[i].Name, torrents[i].SeedRatio, formatDuration(torrents[i].eta))
 	}
 	return &spotraygo.State{
-		Options:  opts,
-		Keybinds: map[int32]func(*spotraygo.App){},
-		Font:     FONT,
+		Options: opts,
+		Keybinds: map[int32]func(*spotraygo.App){
+			rl.KeyTab: func(a *spotraygo.App) {
+				SORTBYACTIVETIME = !SORTBYACTIVETIME
+				a.SetState(getMainState())
+			},
+		},
+		Font: FONT,
 	}
 }
 
 func main() {
 	app := spotraygo.NewApp()
-	app.SetState(getMainState(true))
+	app.SetState(getMainState())
 	app.Start()
 }
 

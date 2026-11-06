@@ -1,5 +1,7 @@
 github.com/chetan0402/SpotRay-go v0.0.0-20261105085313-7acf4bd2e52d h1:8m5btq+S1oz+z7rrXxENON2jFDvyTTSA3bujpP+J7eQ=
 github.com/chetan0402/SpotRay-go v0.0.0-20261105085313-7acf4bd2e52d/go.mod h1:5Aw/Jdk/B4YN4sV+zRT/i5WtzRyptqoDsuJmc1hys3s=
+github.com/chetan0402/SpotRay-go v0.0.0-20261106115422-3f38066ab536 h1:kZzX9cbrgDcysukZi9bKHSY2V4t5mo4Aep51iquAjpY=
+github.com/chetan0402/SpotRay-go v0.0.0-20261106115422-3f38066ab536/go.mod h1:5Aw/Jdk/B4YN4sV+zRT/i5WtzRyptqoDsuJmc1hys3s=
 github.com/ebitengine/purego v0.11.3 h1:OB+JLpdm7ioymhyA+6s5kbb/uOuYycAgL8NNTFc5MLg=
 github.com/ebitengine/purego v0.11.3/go.mod h1:DCHPP08djqhNSoTfImcnHYQRZmd0qhakvrozqaEYhGQ=
 github.com/flopp/go-findfont v0.1.0 h1:lPn0BymDUtJo+ZkV01VS3661HL6F4qFlkhcJN55u6mU=
@@ -10,3 +12,5 @@ github.com/jupiterrider/ffi v0.8.0 h1:IH6lto8OZaRIulQYObtZibII4tq71hXT6Z+KLBcxCc
 github.com/jupiterrider/ffi v0.8.0/go.mod h1:9dauhpOfNqrqk28fxuu0kkdeFtT9Qr4vbfigiuIXN7c=
 golang.org/x/exp v0.0.0-20261014143641-f0251eb4aa3e h1:HgI6W1OolKK6tcV74is+rl9SMT0njsHlp0TbQiGXI/A=
 golang.org/x/exp v0.0.0-20261014143641-f0251eb4aa3e/go.mod h1:DBoxwWhjaW8DJJw/YeM4zpeOKMC1FMXSblsYy+1mFSw=
+golang.org/x/exp v0.0.0-20261106112924-d498a4c2cc9a h1:9UV0zqnJ1V2Wl9FOg3EVZ28FPXBPshV27cHJeoE8RTg=
+golang.org/x/exp v0.0.0-20261106112924-d498a4c2cc9a/go.mod h1:EJDHCytiW+krTUcAo0SrNw+S0Ukgipv/AnFvgpvOAvc=

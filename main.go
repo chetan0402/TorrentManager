@@ -6,8 +6,11 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"os"
+	"os/exec"
 	"slices"
 	"strings"
+	"syscall"
 
 	spotraygo "github.com/chetan0402/SpotRay-go"
 	rl "github.com/gen2brain/raylib-go/raylib"
@@ -32,6 +35,7 @@ type Torrent struct {
 	MaxRatio            float32 `json:"max_ratio"`
 	MaxSeedingTime      int     `json:"max_seeding_time"`
 	SeedingTime         int     `json:"seeding_time"`
+	ContentPath         string  `json:"content_path"`
 	eta                 int     // in seconds
 }
 
@@ -101,9 +105,35 @@ func getMainState() *spotraygo.State {
 			},
 			rl.KeyRight: func(a *spotraygo.App) {
 				k := a.GetSelectedKey()
+				if k == "" {
+					return
+				}
 				for i := range torrents {
 					if torrents[i].Hash == k {
 						a.SetState(getInfoState(k, torrents[i].Name, torrents[i].MaxRatio, torrents[i].MaxSeedingTime))
+						return
+					}
+				}
+				panic("didn't find the hash in list")
+			},
+			rl.KeyEnter: func(a *spotraygo.App) {
+				k := a.GetSelectedKey()
+				if k == "" {
+					return
+				}
+				for i := range torrents {
+					if torrents[i].Hash == k {
+						if strings.HasSuffix(torrents[i].ContentPath, ".mkv") {
+							cmd := exec.Command("mpv", torrents[i].ContentPath)
+							cmd.SysProcAttr = &syscall.SysProcAttr{
+								Setsid: true,
+							}
+							cmd.Stdin = nil
+							cmd.Stdout = nil
+							cmd.Stderr = nil
+							cmd.Start()
+							os.Exit(0)
+						}
 						return
 					}
 				}

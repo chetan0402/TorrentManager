@@ -123,18 +123,13 @@ func getMainState() *spotraygo.State {
 				}
 				for i := range torrents {
 					if torrents[i].Hash == k {
-						if strings.HasSuffix(torrents[i].ContentPath, ".mkv") {
-							cmd := exec.Command("mpv", torrents[i].ContentPath)
-							cmd.SysProcAttr = &syscall.SysProcAttr{
-								Setsid: true,
-							}
-							cmd.Stdin = nil
-							cmd.Stdout = nil
-							cmd.Stderr = nil
-							cmd.Start()
-							os.Exit(0)
-						}
-						return
+						cmd := exec.Command("xdg-open", torrents[i].ContentPath)
+						cmd.SysProcAttr = &syscall.SysProcAttr{Setsid: true}
+						cmd.Stdin = nil
+						cmd.Stdout = nil
+						cmd.Stderr = nil
+						cmd.Start()
+						os.Exit(0)
 					}
 				}
 				panic("didn't find the hash in list")

@@ -135,7 +135,9 @@ func getMainState() *spotraygo.State {
 				panic("didn't find the hash in list")
 			},
 		},
-		Font: FONT,
+		Font:          FONT,
+		SearchTerm:    "",
+		SelectedIndex: 0,
 	}
 }
 
@@ -166,6 +168,9 @@ func getInfoState(hash string, name string, ratio float32, active int) *spotrayg
 				a.SetState(getMainState())
 			},
 		},
+		Font:          FONT,
+		SearchTerm:    "",
+		SelectedIndex: 0,
 	}
 }
 
